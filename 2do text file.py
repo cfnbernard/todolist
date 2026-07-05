@@ -1,23 +1,30 @@
+import os
+
+FILENAME = "TodoList.txt"
+
 tasks = []
-FILE = "tasks.txt"
-
-
-def save_tasks():
-    with open(FILE, "w") as f:
-        for task in tasks:
-            f.write(f"{task['task']}|{task['done']}\n")
 
 
 def load_tasks():
-    try:
-        with open(FILE, "r") as f:
-            for line in f:
-                line = line.strip()
-                if line:
-                    task_name, done = line.rsplit("|", 1)
-                    tasks.append({"task": task_name, "done": done == "True"})
-    except FileNotFoundError:
-        pass  # No file yet — start with an empty list
+    """Load tasks from TodoList.txt into the tasks list, if the file exists."""
+    if not os.path.exists(FILENAME):
+        return
+    with open(FILENAME, "r", encoding="utf-8") as f:
+        for line in f:
+            line = line.strip()
+            if not line:
+                continue
+            # Format: "1::Task text"  (1 = done, 0 = not done)
+            status, _, task_text = line.partition("::")
+            tasks.append({"task": task_text, "done": status == "1"})
+
+
+def save_tasks():
+    """Save the current tasks list back to TodoList.txt."""
+    with open(FILENAME, "w", encoding="utf-8") as f:
+        for task in tasks:
+            status = "1" if task["done"] else "0"
+            f.write(f"{status}::{task['task']}\n")
 
 
 def show_menu():
@@ -42,7 +49,6 @@ def view_task():
         return
     print("\nYour Tasks:")
     for index, task in enumerate(tasks, start=1):
-        # Fix 1: "done" not "Done"
         status = "Done" if task["done"] else "Not done"
         print(f"{index}. {task['task']} [{status}]")
 
@@ -80,9 +86,9 @@ def delete_task():
 
 
 load_tasks()
+
 while True:
     show_menu()
-    # Fix 2: closed parenthesis + 1-5
     choice = input("Choose an option (1-5): ")
 
     if choice == "1":
@@ -93,8 +99,8 @@ while True:
         mark_done()
     elif choice == "4":
         delete_task()
-    elif choice == "5":        # Fix 3: added colon
-        print("Goodbye!")     # Fix 4: properly indented under elif
+    elif choice == "5":
+        print("Goodbye!")
         break
     else:
         print("Invalid choice. Try again.")
